@@ -13,6 +13,13 @@ create table events.users(
     email text,
     firstname text,
     surname text,
-    -- address_json text, --todo add with replay.
+    address text,
+    city text,
     primary key (email)
+);
+
+create table events.users_by_city(
+    city text,
+    email text,
+    primary key (city)
 );

@@ -22,14 +22,14 @@ trait EventStore {
 
 trait EventHandler[T] {
   val eventName: String
-  def handle(event: Event): Future[Either[String,Unit]] = {
+  def handle(event: Event)(implicit eventMachine: EventMachine): Future[Either[String,Unit]] = {
     parseEvent(event).fold[Future[Either[String,Unit]]](
       s => Future.successful(Left(s)),
-      e => handle(e).map(Right(_))
+      e => handle(event, e).map(Right(_))
     )
   }
 
-  def handle(t:T): Future[Unit]
+  def handle(event: Event, t:T)(implicit eventMachine: EventMachine): Future[Unit]
   def parseEvent(data: Event): Either[String,T]
 }
 
@@ -46,12 +46,12 @@ trait EventMachine extends LoggingSupport {
     } yield ()
   }
 
-  private def execute(ev: Event): Future[Unit] = {
+  def execute(ev: Event): Future[Unit] = {
     logger.info(s"executing ${ev.name} $ev")
     Future.sequence(
       handlers
         .filter(_.eventName == ev.name)
-        .map(_.handle(ev)))
+        .map(_.handle(ev)(this)))
       .map(_ => ())
   }
 

@@ -14,7 +14,8 @@ object App extends scala.App {
 
 object MyEventMachine extends EventMachine {
   def handlers = Seq(
-    Core.createUserEventHandler
+    Core.createUserEventHandler,
+    Core.createUserV2EventHandler
   )
 
   val store = new CqlEventStore(Core.session)
@@ -40,4 +41,5 @@ object Core {
 
   val userDao = new UsersDao(session)
   val createUserEventHandler = new CreateUserEventHandler(userDao)
+  val createUserV2EventHandler = new CreateUserEventV2Handler(userDao)
 }

@@ -6,9 +6,12 @@ import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
 object LoaderApp extends scala.App {
-  val events2 = EventGenerator.genEvent.sample.toSeq
 
-  val results = events2.map(MyEventMachine.process)
+  val events = (0 to 20).flatMap { _ =>
+    EventGenerator.genEvent.sample
+  }
+
+  val results = events.map(MyEventMachine.process)
 
   Future.sequence(results)
     .onComplete { _ =>

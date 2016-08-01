@@ -12,10 +12,23 @@ object EventGenerator {
       .getLines()
       .toSeq
 
+  val addresses: Seq[String] =
+    Source.fromInputStream(getClass.getClassLoader.getResourceAsStream("Addresses.csv"))
+      .getLines()
+      .toSeq
+
   val domains = Seq(
     "gmail.com",
     "hotmail.com",
     "yahoo.com"
+  )
+
+  val cities = Seq(
+    "Sydney",
+    "Melbourne",
+    "Brisbane",
+    "Perth",
+    "Adelaide"
   )
 
   val arbEmail: Gen[String] = {
@@ -33,10 +46,16 @@ object EventGenerator {
     }
   }
 
+  val genAddress: Gen[(String,String)] = for {
+    city <- Gen.oneOf(cities)
+    address <- Gen.oneOf(addresses)
+  } yield (city, address)
+
   val genUser: Gen[User] = {
     for {
       name <- Gen.oneOf(names)
       email <- emailFromName(name)
+      cityAddress <- Gen.option(genAddress)
     } yield {
       val parts = name.split(" ")
       val (fname, surname) = (parts(0),parts(1))
@@ -44,10 +63,26 @@ object EventGenerator {
       User(
         email = email,
         firstname = fname,
-        surname = surname
+        surname = surname,
+        city = cityAddress.map(_._1),
+        address = cityAddress.map(_._2)
       )
     }
   }
+
+  val genUserWithAddress: Gen[User] = {
+    for {
+      user <- genUser
+      addr <- genAddress
+    } yield {
+      user.copy(
+        city = Some(addr._1),
+        address = Some(addr._2)
+      )
+    }
+
+  }
+
 
   val userSignupRequestGen: Gen[UserSignupRequest] = {
     for {
@@ -65,10 +100,32 @@ object EventGenerator {
     }
   }
 
+  val userSignupRequestV2Gen: Gen[UserSignupRequestV2] = {
+    for {
+      name <- Gen.oneOf(names)
+      email <- emailFromName(name)
+      cityAddress <- Gen.option(genAddress)
+    } yield {
+      val parts = name.split(" ")
+      val (fname, surname) = (parts(0), parts(1))
+
+      UserSignupRequestV2(
+        email = email,
+        firstname = fname,
+        surname = surname,
+        city = cityAddress.map(_._1),
+        address = cityAddress.map(_._2)
+      )
+    }
+  }
+
   import ToEventImplicits._
 
   val genEvent: Gen[Event] = for {
     usg <- userSignupRequestGen.map(_.toEvent())
-    x <- Gen.oneOf(Seq(usg))
+    usgV2 <- userSignupRequestV2Gen.map(_.toEvent())
+    x <- Gen.oneOf(Seq(
+      usg,
+      usgV2))
   } yield x
 }
