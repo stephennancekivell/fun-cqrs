@@ -13,20 +13,20 @@ object CassandraSpecSupport {
     EmbeddedCassandraServerHelper.startEmbeddedCassandra()
   }
 
+  val session = createSession()
+
   timeIt("drop tables"){
     EmbeddedCassandraServerHelper.cleanEmbeddedCassandra()
   }
 
   timeIt("create tables") {
-    loadCQL("db.migrations/1.cql", createSession())
+    loadCQL("db.migrations/1.cql", session)
   }
-
-  val session = createSession()
 
   def timeIt[A](label: String)(thunk: => A): A = {
     val start = System.currentTimeMillis()
     val re = thunk
-    println(s"[timeit - $label] ${System.currentTimeMillis() - start}ms")
+    //println(s"[timeit - $label] ${System.currentTimeMillis() - start}ms")
     re
   }
 

@@ -1,32 +1,19 @@
 package fun.domain
 
-import fun.eventslib.Event
 import org.joda.time.DateTime
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
 object LoaderApp extends scala.App {
+  val events2 = EventGenerator.genEvent.sample.toSeq
 
-  val event1 = Event(
-    name = "UserSignupRequest",
-    data = Protocols.userSignupFormat.write(UserSignupRequest(
-      email = "foo@bar.com",
-      firstname = "joe",
-      surname = "cobbler"
-    )).toString()
-  )
-
-  val events = Seq(event1)
-
-  val results = events.map(MyEventMachine.process)
+  val results = events2.map(MyEventMachine.process)
 
   Future.sequence(results)
     .onComplete { _ =>
       Core.session.getCluster.close()
     }
-
-
 }
 
 object EventReplay extends scala.App {

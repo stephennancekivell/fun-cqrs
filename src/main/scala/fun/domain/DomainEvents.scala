@@ -17,3 +17,24 @@ case class UserSignupRequestEvent(
    request: UserSignupRequest,
    event: Event
 )
+
+trait ToEvent[A]{
+  def toEvent(a:A): Event
+}
+
+object ToEventImplicits {
+  implicit val usg = UserSignupRequestToEvent
+
+  implicit class ToEventX[A](a:A)(implicit toEventI: ToEvent[A]) {
+    def toEvent(): Event = toEventI.toEvent(a)
+  }
+}
+
+object UserSignupRequestToEvent extends ToEvent[UserSignupRequest] {
+  def toEvent(a: UserSignupRequest): Event = {
+    Event(
+      name = a.getClass.getName,
+      data = Protocols.userSignupFormat.write(a).toString()
+    )
+  }
+}

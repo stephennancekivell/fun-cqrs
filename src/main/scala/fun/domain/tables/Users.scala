@@ -26,4 +26,9 @@ class UsersDao(session: Session) {
     val q = session.prepare("select * from events.users where email = ?").bind(email)
     session.executeAsync(q).toFuture().map(_.all().asScala.headOption.map(_.as[User]))
   }
+
+  def all(): Future[Seq[User]] = {
+    val q = session.prepare("select * from events.users").bind()
+    session.executeAsync(q).toFuture().map(_.all().asScala.map(_.as[User]))
+  }
 }
